@@ -8,6 +8,19 @@ const ImaageEditBox = (props) => {
 
     const store = useStore()
 
+    const handleDragStop = (e, d) => {
+        store.setImage(props.index, {x: d.x, y: d.y})
+    }
+
+    const handleResizeStop = (e, direction, ref, delta, position) => {
+        store.setImage(props.index, {
+            w: ref.clientWidth,
+            h: ref.clientHeight,
+            x: position.x,
+            y: position.y
+        })
+    }
+
     const handleRemove = () => {
         store.removeImage(props.index)
     }
@@ -18,17 +31,8 @@ const ImaageEditBox = (props) => {
                 size={{ width: store.images[props.index].w + 2, height: store.images[props.index].h + 2 }}
                 position={{ x: store.images[props.index].x, y: store.images[props.index].y}}
                 lockAspectRatio={true}
-                onDragStop={(e, d) => {
-                    store.setImage(props.index, {x: d.x, y: d.y})
-                }}
-                onResizeStop={(e, direction, ref, delta, position) => {
-                    store.setImage(props.index, {
-                        w: ref.clientWidth,
-                        h: ref.clientHeight,
-                        x: position.x,
-                        y: position.y
-                    })
-                }}
+                onDragStop={handleDragStop}
+                onResizeStop={handleResizeStop}
             >
                 <img src={store.images[props.index].url} alt="" />
                 <StyledIBox onClick={handleRemove}>
