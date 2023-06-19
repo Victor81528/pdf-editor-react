@@ -1,3 +1,5 @@
+import { PDFDocument } from 'pdf-lib'
+
 export const base64ToBlob = (base64) => {
 
     const binaryImg = atob(base64.split(',')[1])
@@ -26,4 +28,20 @@ export const blobToBase64 = async (objectUrl) => {
             resolve(reader.result)
         }
     })
+}
+
+export const handleModifyPDF = async (url, imgs, handleAddImage) => {
+        
+    // 加載PDF
+    const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer())
+    const pdfDoc = await PDFDocument.load(existingPdfBytes)
+    
+    // 迴圈處理所有圖片
+    for (let i = 0; i < imgs.length; i++) {
+        await handleAddImage(imgs[i], pdfDoc)
+    }
+
+    // 將PDF轉成二進制或base64
+    const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true })
+    return pdfBytes
 }

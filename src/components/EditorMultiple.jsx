@@ -9,8 +9,14 @@ import { FreeMode, Navigation } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/swiper-bundle.min.css'
 
-import { PDFDocument } from 'pdf-lib'
 import JSZip from 'jszip'
+
+import { handleModifyPDF } from '../utils.js'
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.min.js',
+    import.meta.url,
+).toString()
 
 const EditorMultiple = () => {
 
@@ -84,25 +90,9 @@ const EditorMultiple = () => {
         page.drawImage(pngImage, {
             x: imgageInfo.x_percents * page.getWidth(),
             y: (1 - imgageInfo.y_percents - imgageInfo.h_percents) * page.getHeight(),
-            // y: (canvasHeight() - imgageInfo.y - imgageInfo.h) * scale,
             width:  imgageInfo.w_percents * page.getWidth(),
             height:  imgageInfo.h_percents * page.getHeight(),
         })
-    }
-    const handleModifyPDF = async (url) => {
-    
-        // 加載PDF
-        const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer())
-        const pdfDoc = await PDFDocument.load(existingPdfBytes)
-        
-        // 迴圈處理所有圖片
-        for (let i = 0; i < store.images.length; i++) {
-            await handleAddImage(store.images[i], pdfDoc)
-        }
-    
-        // 將PDF轉成二進制或base64
-        const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true })
-        return pdfBytes
     }
     const handleDownloadPDF = async () => {
     
@@ -110,7 +100,11 @@ const EditorMultiple = () => {
 
         for (let i = 0; i < store.pdfs.length; i++) {
             
-            const url = await handleModifyPDF(store.pdfs[i].url)
+            const url = await handleModifyPDF(
+                store.pdfs[i].url,
+                store.images,
+                handleAddImage
+            )
             store.pdfs[i].url = url
         }
 

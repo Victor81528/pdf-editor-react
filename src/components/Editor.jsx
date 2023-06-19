@@ -7,13 +7,11 @@ import { pdfjs, Document, Page } from 'react-pdf'
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 
-import { PDFDocument } from 'pdf-lib'
-
 import { FreeMode, Navigation } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/react';
 import 'swiper/swiper-bundle.min.css'
 
-import { blobToBase64 } from '../utils.js'
+import { blobToBase64, handleModifyPDF } from '../utils.js'
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.js',
@@ -161,37 +159,23 @@ const Editor = () => {
             height:  imgageInfo.h * scale
         })
     }
-    const handleModifyPDF = async () => {
-    
-        store.setLoading(true)
-        
-        const url = store.pdfs[0].url
-        
-        // 加載PDF
-        const existingPdfBytes = await fetch(url).then(res => res.arrayBuffer())
-        const pdfDoc = await PDFDocument.load(existingPdfBytes)
-        
-        // 迴圈處理所有圖片
-        for (let i = 0; i < store.images.length; i++) {
-            await handleAddImage(store.images[i], pdfDoc)
-        }
-        // imageStore.images = []
-    
-        // 將PDF轉成二進制或base64
-        const pdfBytes = await pdfDoc.saveAsBase64({ dataUri: true })
-        store.pdfs[0].url = pdfBytes
-        
-        store.setLoading(false)
-    }
     const handleDownloadPDF = async () => {
 
-        await handleModifyPDF()
+        store.setLoading(true)
+
+        const url = await handleModifyPDF(
+            store.pdfs[0].url,
+            store.images,
+            handleAddImage
+        )
+        store.pdfs[0].url = url
     
         const link = document.createElement('a')
         link.href = store.pdfs[0].url
         link.download = `${store.pdfs[0].name}_signed.pdf`
         link.click()
     
+        store.setLoading(false)
         location.reload() 
     }
     // 將設定檔匯出
